@@ -1,0 +1,40 @@
+I write quite a few console apps: utilities (of course), one-off tools, 
+proof-of-concept apps, speed-tests of isolated algorithms, whatever.  
+(Powershell and xUnit have whittled away at most of my needs for console apps,
+but occassionally nothing else will do.)
+
+I find myself slapping together, over and over again, snippets to do
+the same basic functions for these apps.  Thought it was time to collect
+these in one place.
+
+Mostly, though, it's just an excuse to play with 'git submodule' :-)
+
+The sub-directories contain the following simple snippets:
+
+	Arguments	-- A ProgramArguments implementation allowing
+	         	   defining and parsing of bool and name/value
+	         	   command-line arguments, including basic
+	         	   help-text formatting about the args.
+
+	         	   The expected use is to sub-class ProgramArguments
+	         	   so you can add strongly-typed, intellisense'd
+	         	   property-names atop the base-class primitives.
+
+	Std Pipes	-- Functions that ease the choice of file- or 
+	        	   stdin/stdout text streams, including
+	         	   encoding- and LF/CRLF-detection, 
+	         	   determining if newline is needed prior to append,
+	         	   and a simplistic IEnumerable<string> atop ReadLine.
+
+	Logging   	-- An ExceptionHandler that walks the InnerException
+	          	   chain for you, emits the stacktrace of the outer-most throw,
+	        	   formats it for display or logging.
+
+	Csv        	-- Basic enumeration of lines from delimited files.
+
+	
+
+These were all cobbled together to give minimal functionality to 
+(predominantly throw-away) apps, so they've no polish whatsoever,
+just quick-n'-dirty scaffolding for common needs. 
+
