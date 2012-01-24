@@ -47,6 +47,9 @@
     <Compile Include="Csv\Csv Handling.cs" />
     <Compile Include="Linq Utils\LinqExtensions.cs" />
     <Compile Include="Logging\ExceptionHandler.cs" />
+    <Compile Include="Perf Compare\PerfCompare.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Std Pipes\FileOps.cs" />
   </ItemGroup>
