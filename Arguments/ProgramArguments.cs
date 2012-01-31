@@ -183,6 +183,57 @@ namespace My.Utilities
             definitions.Add( def );
         }
 
+        public ProgramArguments  AddInt(
+                                   string propName,
+                                   string helpString,
+                                   string shortSwitch,
+                                   string longSwitch   = null,
+                                   int?   defaultVal   = null,
+                                   bool   isMandatory  = false )
+        {
+            var ad       = new IntArgDef( propName, shortSwitch, longSwitch, helpString );
+            ad.Mandatory = isMandatory;
+            if( defaultVal != null && defaultVal.HasValue )
+            {
+                ad.DefaultValue = (object) defaultVal.Value;
+            }
+            Add( ad );
+            return this;
+        }
+
+
+        public ProgramArguments  AddBool(
+                                   string propName,
+                                   string helpString, 
+                                   string shortSwitch,
+                                   string longSwitch   = null )
+        {
+            var ad       = new BoolArgDef( propName, shortSwitch, longSwitch, helpString );
+            Add( ad );
+            return this;
+        }
+
+
+        public ProgramArguments  AddString(
+                                   string propName,
+                                   string helpString,
+                                   string shortSwitch,
+                                   string longSwitch   = null,
+                                   string defaultVal   = null,
+                                   bool   isMandatory  = false )
+        {
+            var ad       = new StringArgDef( propName, shortSwitch, longSwitch, helpString );
+            ad.Mandatory = isMandatory;
+            if( defaultVal != null )
+            {
+                ad.DefaultValue = (object) defaultVal;
+            }
+            Add( ad );
+            return this;
+        }
+
+
+
         /// <summary>Gets whether argument switchess are case-sensitive</summary>
         /// <remarks>Windows users typically expect fase, case-insensitive</remarks>
         public bool    CaseSensitive { get; private set; }

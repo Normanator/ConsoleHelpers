@@ -45,6 +45,9 @@ namespace My.Utilities
     /// </summary>
     public class PerfCandidate
     {
+        public PerfCandidate( string summary )
+        { this.Summary = summary; }
+
         /// <summary>The method to test for performance</summary>
         public Action   Run           { get; set; }
 
@@ -54,30 +57,32 @@ namespace My.Utilities
         /// <summary>
         /// A chance to create durable data that will be used in later runs.
         /// You can prime-the-pump here, too.
-        /// </summary>
-        /// <remarks>The first param is the 'scale' value you provided,
-        /// the second parameter is a pre-seeded Random object.</remarks>
+        /// The first param is the overall 'scale' value you provided,
+        /// the second parameter is a pre-seeded Random object
+        /// (all candidates get the same seed)</summary>
         public Action<int, Random>   InitCandidate  { get; set; }
 
-        /// <summary>A method you can use to initialize each run.</summary>
-        /// <remarks>This will be called before each of the N Run calls.
+        /// <summary>A method you can use to initialize each run.
+        /// This will be called before each of the N Run calls.
         /// The first int is the run number (0..NumberOfRuns-1), 
         /// the second int is the scalePerRun value you specified,
-        /// the Random object will have been pre-seeded (repeatably so,
-        /// as a deterministic function of the initial seed to PerfCompar)</remarks>
+        /// the Random object will have been pre-seeded with the same
+        /// value as the corresponding run-number received for all other candidates
+        /// </summary>
         public Action<int,int,Random>    InitRun        { get; set; }
 
-        /// <summary>A way to verify the run's results (optional)</summary>
-        /// <remarks>Return false to mark the test as failed.</remarks>
+        /// <summary>A way to verify the run's results (optional).
+        /// Return false to mark the test as failed.</summary>
         public Func<bool>            ValidateRun    { get; set; }
 
-        /// <summary>A way to check state after all the runs</summary>
-        /// <remarks>Return false to mark the candidate as failed.</remarks>
+        /// <summary>A way to check state after all the runs.
+        /// Return false to mark the candidate as failed.</summary>
         public Func<bool>            ValidateFinal  { get; set; }
 
         /// <summary>Callback to tear-down the InitCandidate data</summary>
         public Action                CleanupFinal   { get; set; }
 
+        #region internals
 
         internal void   ProvideDefaultBehaviors()
         {
@@ -101,17 +106,17 @@ namespace My.Utilities
             if( CleanupFinal == null )
                 CleanupFinal = () => {};
         }
+        #endregion
     }
 
 
 
     public class PerfCompare
     {
-        private int RandSeed     { get; set; }
-        private int NumberOfRuns { get; set; }
-        private int ScaleOverall { get; set; }
-        private int ScalePerRun  { get; set; }
-        private int [] RunSeeds  { get; set; }
+        private int RandSeed      { get; set; }
+        private int NumberOfRuns  { get; set; }
+        private int ScaleOverall  { get; set; }
+        private int ScalePerRun   { get; set; }
 
         private List<PerfCandidate>   candidates = new List<PerfCandidate>();
         private List<PerfResult>      results    = new List<PerfResult>();
@@ -124,11 +129,21 @@ namespace My.Utilities
             this.ScaleOverall = scaleOverall;
             this.ScalePerRun  = scalePerRun;
 
-            Random   rand = new Random( RandSeed );
-            RunSeeds      = MakeSeeds( NumberOfRuns );
+            InitApplication = ( i, r ) => { };
         }
 
+        /// <summary>
+        /// A chance to create a test envrionment truly common to all candidates.
+        /// (Often better than creating comparable (but tailored) data volumes 
+        /// thru PerfCandidate.InitCandidate).
+        /// The first param is the overall 'scale' value you provided,
+        /// the second parameter is a pre-seeded Random object.</summary>
+        public Action<int, Random>   InitApplication  { get; set; }
 
+
+        /// <summary>Registeres a new candidate implementation.</summary>
+        /// <param name="candidate">An alternative algorithm to test.</param>
+        /// <returns>This PerfCompare instance (fluent-API style)</returns>
         public PerfCompare  Add( PerfCandidate candidate )
         {
             candidates.Add( candidate );
@@ -136,9 +151,17 @@ namespace My.Utilities
         }
 
 
+        /// <summary>Kicks off the test runs of all candidates.
+        /// (Use Report() to view results.)</summary>
+        /// <returns>True if all tests passed their Validate... functions</returns>
         public bool Start( )
         {
-            int []  candSeeds = MakeSeeds( candidates.Count );
+            Random  rand      = new Random( RandSeed );
+            int     candSeed  = rand.Next();
+            int     runSeed   = rand.Next();
+
+
+            InitApplication( this.ScaleOverall, new Random( rand.Next() ) );
 
             bool overallSuccess = true;
             for( int i = 0; i < candidates.Count; ++i )
@@ -150,17 +173,19 @@ namespace My.Utilities
                 candidate.ProvideDefaultBehaviors();
 
                 // Create any nifty initial data-volume to operate over.
-                candidate.InitCandidate( ScaleOverall, new Random( candSeeds[ i ] ) );
+                Random  candRand = new Random( candSeed );
+                candidate.InitCandidate( ScaleOverall, candRand );
 
+                Random      runRand   = new Random( runSeed );
                 Stopwatch   stopWatch = new Stopwatch();
                 for( int j = 0; j < NumberOfRuns; ++j )
                 {
-                    // Create any request-set to time
-                    candidate.InitRun( j, ScalePerRun, new Random( RunSeeds[ j ] ) );
+                    // Create the request-object for this run, done outside the timer.
+                    candidate.InitRun( j, ScalePerRun, runRand );
 
                     stopWatch.Start();
 
-                    // Fire in the hole!
+                    // Fire in the hole!  This is the part we're actually timing
                     candidate.Run();
 
                     stopWatch.Stop();
@@ -192,6 +217,8 @@ namespace My.Utilities
         }
 
 
+        /// <summary>Evaluates results of each candidate.</summary>
+        /// <returns>A list of timing results for each candidate.</returns>
         public IEnumerable<PerfResult>   Report( )
         {
             long Tbest = (from pr in results
@@ -215,17 +242,24 @@ namespace My.Utilities
         }
 
 
+        /// <summary>Evaluates results of each candidate emitting
+        /// a formatted, tab-delimited line for each</summary>
+        /// <returns>A list of string representations of PerfResults,
+        /// with 2 lines of comments and a header-row.</returns>
         public IEnumerable<string> FormatReport()
         {
             //                           0   1      2     3
             string [] header = new[]
             { 
-                "#\tValid\tMsec        \tbase\tbest\tsummary"
+                string.Format( "#   RandSeed:  {0}  ScaleOverall: {1}  ScalePerRun: {2}",
+                               this.RandSeed, this.ScaleOverall, this.ScalePerRun ),
+                "#",
+                "Candidate\tValid\tMsec        \tbase%\tbest%\tsummary"
             };
             var fmt = from pr in Report()
-                      select string.Format( "{0}\t{1}\t{2:12}\t{3}%\t{4}%\t{5}",
+                      select string.Format( "{0,9}\t{1}\t{2:12}\t{3,4}%\t{4,4}%\t{5}",
                           pr.CandidateNumber,
-                          pr.IsValid ? "ok" : "fail",
+                          pr.IsValid.ToString(),
                           pr.Msecs.ToString( "N3" ),
                           pr.RelativePerf.Item1.ToString( "N0" ),
                           pr.RelativePerf.Item2.ToString( "N0" ),
@@ -235,10 +269,10 @@ namespace My.Utilities
 
 
 
-        internal int []  MakeSeeds( int ct )
+        private int []  MakeSeeds( int ct, int seed )
         {
-            Random   rand = new Random( RandSeed );
-            return (from i in Enumerable.Range( 0, NumberOfRuns )
+            Random   rand = new Random( seed );
+            return (from i in Enumerable.Range( 0, ct )
                     let  s = rand.Next()
                     select s).ToArray();
         }
@@ -246,6 +280,10 @@ namespace My.Utilities
     } // end class PerfCompare
 
 
+    // --------------------------------------------------
+
+    /// <summary>Summary statistics for a given PerfCandidate</summary>
+    [System.Diagnostics.DebuggerDisplay("[{CandidateNumber}] Ticks={Ticks} ({Msecs})  IsValid={IsValid}")]
     public class PerfResult
     {
         public PerfResult()
@@ -253,12 +291,27 @@ namespace My.Utilities
             IsValid = true;
         }
 
+        /// <summary>Ordinal number of Candidate added to PerfCompare</summary>
         public int                 CandidateNumber { get; internal set; }
+
+        /// <summary>Echo of the PerfCandidate summary text</summary>
         public string              Summary         { get; internal set; }
+
+        /// <summary>True if no exceptions or Validate... failures</summary>
         public bool                IsValid         { get; internal set; }
+
+        /// <summary>Raw Stopwatch/RTDCT ticks</summary>
         public long                Ticks           { get; internal set; }
+
+        /// <summary>Echo of numberofRuns value given to PerfCompare</summary>
         public int                 NumberOfRuns    { get; internal set; }
+
+        /// <summary>List of which run #s failed</summary>
+        /// <remarks>Seed values mean runs should be repeatable; set a conditional-breakpoint on these numbers</remarks>
         public List<int>           RunFailures     { get; internal set; }
+
+        /// <summary>Tuple of speed vs 0th candidate and vs. fastest candidate,
+        /// calculated as Ti/T0 or Ti/Tj respectively.</summary>
         public Tuple<float,float>  RelativePerf    { get; internal set; }
 
         /// <summary>Gets the elapsed milliseconds</summary>
