@@ -450,10 +450,10 @@ namespace My.Utilities
 
 
         /// <summary>A diagnostic routine to format the parsed results</summary>
-        /// <param name="writer">An output writer, eg. Console.Out</param>
+        /// <param name="writer">An output writer, eg. Console.Out (null for Debug.Write)</param>
         public void Dump( System.IO.TextWriter  writer = null )
         {
-            writer = writer ?? Console.Out;
+            var wri = writer ?? new System.IO.StringWriter();
             foreach( var av in dictionary.Values )
             {
                 // Displaying '/SetMeansTrue = false' is confusing
@@ -463,10 +463,19 @@ namespace My.Utilities
                     continue;
                 }
 
-                string msg = string.Format( "   --{0}\t{1}",
-                    av.Definition.LongSwitch,
-                    av.Value.ToString() );
-                writer.WriteLine( msg );
+                string  val         = av.Value.ToString();
+                bool    needsQuotes = -1 != val.IndexOfAny( new[] { ' ', '\t' } );
+                string  fmt         = needsQuotes
+                                       ? "  --{0} \"{1}\""
+                                       : "  --{0} {1}";
+
+                string msg = string.Format( fmt, av.Definition.LongSwitch, val );
+                wri.Write( msg );
+            }
+
+            if( writer == null )
+            {
+                System.Diagnostics.Debug.WriteLine( wri.ToString() );
             }
         }
         #endregion

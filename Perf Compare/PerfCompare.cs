@@ -27,8 +27,9 @@ namespace My.Utilities
     //         d) optionally some 'scalePerRun' as a hint to each Run call,
     //            e.g. in case selecting 1000 results differs in perf from selecting 10.
     //    2) Provide a list of PerfCandidates to PerfCompare
-    //    3) InitCandidate allows you to create the durable data-structures 
-    //       that will be used across all the runs.
+    //    3) PerfCompare.InitApplication allows you to create the durable data-structures 
+    //       that will be used across all the runs.  If candidates do destructive things to this,
+    //       istead set your data-volume init logic in PerfCandidate.InitCandidate.
     //    4) InitRun will be called each of the N runs to allow you to 
     //       pre-generate a block of inputs, etc. outside the timer.
     //       You get a Random object here to help you create loads free of bias.
@@ -110,7 +111,7 @@ namespace My.Utilities
     }
 
 
-
+    /// <summary>Scaffolding for running comparative performance tests</summary>
     public class PerfCompare
     {
         private int RandSeed      { get; set; }
@@ -268,7 +269,7 @@ namespace My.Utilities
         }
 
 
-
+        #region internals
         private int []  MakeSeeds( int ct, int seed )
         {
             Random   rand = new Random( seed );
@@ -276,6 +277,7 @@ namespace My.Utilities
                     let  s = rand.Next()
                     select s).ToArray();
         }
+        #endregion
 
     } // end class PerfCompare
 
