@@ -1,0 +1,1 @@
+@powershell "& start-process -FilePath '%~1' -Verb Runas -WorkingDirectory '%CD%'"

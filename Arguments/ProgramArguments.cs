@@ -47,10 +47,9 @@ namespace My.Utilities
         public bool   UnSwitched     { get; set; }
 
         /// <summary>
-        /// 
+        /// Gets or sets whether the user must set this argument.
+        /// For bool switches, and those with DefaultValue, this is ignored.
         /// </summary>
-        /// <remarks>If a DefaultValue has been set, Mandatory is ignored.
-        /// Mandatory cannot be set on boolean arguments.</remarks>
         public bool   Mandatory
         { 
             get { return isMandatory;  }
@@ -79,6 +78,7 @@ namespace My.Utilities
         /// <summary>In formatting help-text, where should this argument go?</summary>
         /// <remarks>Anything greater than 1001 means after "Help" and "WhatIf"</remarks>
         public int    HelpOrder      { get; set; }
+
     }
 
     public class BoolArgDef : ArgDef
@@ -144,6 +144,15 @@ namespace My.Utilities
 
         public bool  GetBool()
         { return Value != null ? (bool) Value : false; }
+
+        public static implicit operator bool(ArgValue av)
+        { return av.GetBool(); }
+
+        public static implicit operator string(ArgValue av)
+        { return av.GetString(); }
+
+        public static implicit operator int(ArgValue av)
+        { return av.GetInt(); }
     }
 
     // ----------------------------------------------------------
@@ -595,7 +604,7 @@ namespace My.Utilities
         {
             var mandatories = definitions.Where( ( ad ) => ad.Mandatory );
             var gotten      = dictionary.Values.Select( (v) => v.Definition );
-            var test        = mandatories.Except( gotten, (m,g) => (m == g) );
+            var test        = mandatories.Except( gotten );
 
             if( test.Count() > 0 )
             {
