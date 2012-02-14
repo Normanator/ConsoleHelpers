@@ -8,6 +8,7 @@ namespace My.Utilities
     /// <summary>
     /// Definition of allowable command-line arguments
     /// </summary>
+    [System.Diagnostics.DebuggerDisplay("{PropertyName} /{ShortSwitch} --{LongSwitch} ({IsMandatory}, {UnSwitched})")]
     public abstract class ArgDef
     {
         public enum Kind { String, Bool, Int };
@@ -56,6 +57,11 @@ namespace My.Utilities
             set { isMandatory = (ArgKind != Kind.Bool ? value : false); }
         }
 
+        /// <summary>
+        /// A 'Secret' argument is one that doesn't appear in GetHelp().
+        /// </summary>
+        public bool Secret { get; internal set; }
+
         /// <summary>Gets or sets the default value as a boxed object</summary>
         /// <remarks>
         /// <seealso cref="SetDefaultValue"/> on StringArgDef and IntArgDef.
@@ -69,7 +75,6 @@ namespace My.Utilities
 
         /// <summary>Gets or sets help information about this argument</summary>
         /// <remarks>
-        /// 
         /// Best to use \r\n to keep lines ~50 characters.
         /// DefaultValue and Mandatory will be emitted automatically.
         /// </remarks>
@@ -434,6 +439,7 @@ namespace My.Utilities
             sb.AppendLine( "  -----  ----         -----------" );
 
             var helpDefs = from d in definitions
+                           where !d.Secret
                            orderby d.HelpOrder
                            select d;
             foreach( var def in helpDefs )
@@ -564,7 +570,7 @@ namespace My.Utilities
                    (string.Compare( def.ShortSwitch, d.ShortSwitch, scmode ) == 0 ||
                     string.Compare( def.ShortSwitch, d.LongSwitch,  scmode ) == 0)) ||
                   (def.LongSwitch != Unassigned &&
-                   (string.Compare( def.ShortSwitch, d.ShortSwitch, scmode ) == 0 ||
+                   (string.Compare( def.ShortSwitch, d.LongSwitch, scmode ) == 0 ||
                     string.Compare( def.LongSwitch,  d.LongSwitch,  scmode ) == 0 )) ) )
             {
                 string msg = string.Format( "Either {0} or {1} collides with an existing switch",
