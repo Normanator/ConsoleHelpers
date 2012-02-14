@@ -269,6 +269,22 @@ namespace My.Utilities
         }
 
 
+        /// <summary>
+        /// Emits the lines from <see cref="FormatReport"/>
+        /// to the designated TextWriter.
+        /// </summary>
+        /// <param name="writer">The TextWriter to use or Console.Out if null</param>
+        public void WriteReport( System.IO.TextWriter writer )
+        {
+            writer = writer ?? Console.Out;
+            foreach( var line in FormatReport() )
+            {
+                writer.WriteLine( line );
+            }
+        }
+
+
+
         #region internals
         private int []  MakeSeeds( int ct, int seed )
         {
