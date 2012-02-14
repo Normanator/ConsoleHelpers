@@ -1,4 +1,10 @@
-﻿using System;
+﻿// *************************************************
+// *  ProgramArguments.cs
+// *      A simplistic implementation for defining
+// *  and parsing command-line arguments.
+// *  
+// *************************************************
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
