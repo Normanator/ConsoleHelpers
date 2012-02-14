@@ -35,6 +35,19 @@ namespace My.Utilities
         }
 
 
+        /// <summary>
+        /// Returns a sub-sequence of the 'left' enumeration that 
+        /// of only elements that match any in the 'right' enumeration
+        /// as judged by a predicate function.  
+        /// Linq's native Except does not accept a predicate lambda.  
+        /// This is a crude O(n^2) remedy for this missing functionality.
+        /// </summary>
+        /// <typeparam name="TLeft">The type of element in the first series</typeparam>
+        /// <typeparam name="TRight">The type of element in the checked-against series</typeparam>
+        /// <param name="left">The original enumeration</param>
+        /// <param name="right">The checked-against enumeration</param>
+        /// <param name="predicate">The test.</param>
+        /// <returns>A sub-sequence from the original left sequence </returns>
         public static IEnumerable<TLeft> Except<TLeft,TRight>(
                                           this IEnumerable<TLeft>    left,
                                           IEnumerable<TRight>        right,

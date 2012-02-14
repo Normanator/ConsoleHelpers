@@ -156,17 +156,18 @@ namespace My.Utilities
                 reader          = Console.In;
                 
                 // Cmd /U opens Unicode pipes to files, but purely internally;
-                // the codepage (e.g. chcp 437) stays the same.  
-                // CMD does not support chcp 1200 (Unicode) 1201 (UTF-16 BigEndian).
+                // the codepage (e.g. chcp 437) of console hostng CMD stays the same.
+                // The console does not support chcp 1200 (Unicode) 1201 (UTF-16 BigEndian).
+                // yuck:http://social.msdn.microsoft.com/forums/en-US/netfxbcl/thread/8efe163b-927e-4895-9983-b8c47b515d7c/
 
-                if( Console.InputEncoding.CodePage == 437 ) // Near certain it's IBM
+                if( Console.InputEncoding.CodePage == 65001 )
+                {
+                    encoding = Encoding.UTF8;
+                }
+                else
                 {
                     // TODO: Additional checks for 'cmd /U' to pick Unicode
                     encoding = Encoding.ASCII;
-                }
-                else if( Console.InputEncoding.CodePage == 65000 )
-                {
-                    encoding = Encoding.UTF8;
                 }
             }
             else
@@ -187,7 +188,6 @@ namespace My.Utilities
             return Tuple.Create( reader, endOfLineMark, encoding );
         }
 
-    }
-
+    } // end class  FileOps
 
 }

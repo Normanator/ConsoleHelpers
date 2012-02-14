@@ -129,6 +129,7 @@ namespace My.Utilities
     /// <summary>
     /// Command-line arguments as parsed
     /// </summary>
+    [System.Diagnostics.DebuggerDisplay( "Switch={Definition.ShortSwitch} Value={Value}")]
     class ArgValue
     {
         public static readonly ArgValue  Empty = new ArgValue();
@@ -305,7 +306,7 @@ namespace My.Utilities
                 string argToTest = args[ argnum ];
 
                 // In search of a switch, what test should we use?
-                Func<string,ArgDef,bool>  test = null;
+                Func<string,ArgDef,bool>  test = (_,d) => false;
                 if( args[ argnum ].StartsWith( "/" ) )
                 {
                     test = etest;
