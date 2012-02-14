@@ -192,7 +192,7 @@ namespace My.Utilities
             definitions.Add( def );
         }
 
-        public ProgramArguments  AddInt(
+        public ArgDef  AddInt(
                                    string propName,
                                    string helpString,
                                    string shortSwitch,
@@ -207,11 +207,11 @@ namespace My.Utilities
                 ad.DefaultValue = (object) defaultVal.Value;
             }
             Add( ad );
-            return this;
+            return ad;
         }
 
 
-        public ProgramArguments  AddBool(
+        public ArgDef  AddBool(
                                    string propName,
                                    string helpString, 
                                    string shortSwitch,
@@ -219,11 +219,11 @@ namespace My.Utilities
         {
             var ad       = new BoolArgDef( propName, shortSwitch, longSwitch, helpString );
             Add( ad );
-            return this;
+            return ad;
         }
 
 
-        public ProgramArguments  AddString(
+        public ArgDef  AddString(
                                    string propName,
                                    string helpString,
                                    string shortSwitch,
@@ -238,7 +238,7 @@ namespace My.Utilities
                 ad.DefaultValue = (object) defaultVal;
             }
             Add( ad );
-            return this;
+            return ad;
         }
 
 
@@ -251,6 +251,16 @@ namespace My.Utilities
         /// <remarks>If null/empty, <see cref="GetHelp"/> will 
         /// return the process-name alone.</remarks>
         public string  HelpSummary   { get; set; }
+
+        /// <summary>
+        /// Gets all the unmatched strings on the command-line.
+        /// This does not include the one ArgDef that may have Unswitched=true set.
+        /// </summary>
+        /// <returns>Unmatched strings in a list, typically this is empty</returns>
+        public IList<string> GetRemainderArgs()
+        {
+            return this.remainder;
+        }
 
 
         /// <summary>Parse command-line arguments with known ArgDefs</summary>
@@ -343,10 +353,7 @@ namespace My.Utilities
                     }
                     else
                     {
-                        throw new IndexOutOfRangeException(
-                            "An unrecognized switch name or " + 
-                            "a value unpaired with a swtich was encountered.  " + 
-                            "Use /? to see legal command-line arguments." );
+                        remainder.Add( args[ argnum ] );
                     }
                     unswitchedArg = null;
                 }
