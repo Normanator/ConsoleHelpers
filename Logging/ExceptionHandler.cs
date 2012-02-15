@@ -10,6 +10,7 @@ namespace My.Utilities
     {
         private const string stackSuppressKey = "StackSuppress";
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed" )]
         public static string FormatDetails( Exception ex, string context = null )
         {
             Exception     ix        = ex;

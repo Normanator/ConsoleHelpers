@@ -23,6 +23,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <CodeAnalysisRuleSet>helpers.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <PlatformTarget>x86</PlatformTarget>
@@ -43,8 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Arguments\DataBindOnce.cs" />
     <Compile Include="Arguments\ProgramArguments.cs" />
-    <Compile Include="Csv\Csv Handling.cs" />
     <Compile Include="Linq Utils\LinqExtensions.cs" />
     <Compile Include="Logging\ExceptionHandler.cs" />
     <Compile Include="Perf Compare\PerfCompare.cs">

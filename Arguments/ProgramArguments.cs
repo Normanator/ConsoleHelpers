@@ -14,13 +14,14 @@ namespace My.Utilities
     /// <summary>
     /// Definition of allowable command-line arguments
     /// </summary>
-    [System.Diagnostics.DebuggerDisplay("{PropertyName} /{ShortSwitch} --{LongSwitch} ({IsMandatory}, {UnSwitched})")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Design", "CA1012:AbstractTypesShouldNotHaveConstructors" ), System.Diagnostics.DebuggerDisplay( "{PropertyName} /{ShortSwitch} --{LongSwitch} ({IsMandatory}, {UnSwitched})" )]
     public abstract class ArgDef
     {
+        [System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible" )]
         public enum Kind { String, Bool, Int };
 
-        protected bool   isMandatory    = false;
-        protected object defaultValue   = null;
+        private bool   isMandatory    = false;
+        private object defaultValue   = null;
 
         public ArgDef( string propName, string shortSwitch, string longSwitch,
                        string helpText )
@@ -99,7 +100,7 @@ namespace My.Utilities
             : base( propName, shortSwitch, longSwitch, helpText )
         {
             ArgKind = ArgDef.Kind.Bool;
-            defaultValue = (object) false; 
+            DefaultValue = (object) false; 
         }
     }
 
@@ -170,7 +171,23 @@ namespace My.Utilities
     // ----------------------------------------------------------
 
 
-    /// <summary>Utility to manage command-line arguments</summary>
+    /// <summary>
+    /// Utility to manage command-line arguments.
+    /// Example:
+    ///    class MyArgs : ProgramArguments { 
+    ///      public MyArgs( string [] args )
+    ///      {
+    ///         AddString( "FooBar", "Url to FooBar page",
+    ///            "f", "fooBar", isMandatory: true )
+    ///              .UnSwitched = true;
+    ///         base.Parse();
+    ///      }
+    ///      
+    ///      // This will automatically get set by Parse() above
+    ///      // because "FooBar" arg-def name matches C# property name
+    ///      public string FooBar { get; protected set; }
+    ///    }
+    /// </summary>
     class ProgramArguments
     {
         private const string         Unassigned    = "|";
@@ -188,7 +205,7 @@ namespace My.Utilities
             helpArg.HelpOrder = 1000;
             Add( helpArg );
 
-            ArgDef  whatIfArg = new BoolArgDef( "WhatIf", null, "WhatIf", 
+            ArgDef  whatIfArg = new BoolArgDef( "WhatIf", "WhatIf", "WhatIf", 
                     "Shows what would occur without actually doing the actions" );
             whatIfArg.HelpOrder=1001;
             Add( whatIfArg );
@@ -383,6 +400,22 @@ namespace My.Utilities
                 CheckMandatorySwitches();
             }
 
+            BindDerivedClassProperties( );
+
+        }
+
+
+        /// <summary>
+        /// Uses reflection to find C# property-setters matching ArgDef.Name
+        /// and assigns the ArgVal value to them.  
+        /// </summary>
+        protected void BindDerivedClassProperties( )
+        {
+            var namedProps =
+                from av in dictionary
+                select Tuple.Create( (string)av.Key, (object)av.Value.Value );
+
+            DataBindOnce.SetProperties( this, namedProps );
         }
 
 
@@ -495,8 +528,8 @@ namespace My.Utilities
                 string  val         = av.Value.ToString();
                 bool    needsQuotes = -1 != val.IndexOfAny( new[] { ' ', '\t' } );
                 string  fmt         = needsQuotes
-                                       ? "  --{0} \"{1}\""
-                                       : "  --{0} {1}";
+                                        ? "  --{0} \"{1}\""
+                                        : "  --{0} {1}";
 
                 string msg = string.Format( fmt, av.Definition.LongSwitch, val );
                 wri.Write( msg );
@@ -551,6 +584,7 @@ namespace My.Utilities
             }
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly" )]
         private void ValidateDefinitions( ArgDef def )
         {
             var scmode = SCMode;
@@ -559,7 +593,9 @@ namespace My.Utilities
             if( string.IsNullOrWhiteSpace( def.ShortSwitch ) && 
                 string.IsNullOrWhiteSpace( def.LongSwitch ) )
             {
-                throw new ArgumentOutOfRangeException( "ShortSwitch or LongSwitch must be set" );
+                throw new ArgumentOutOfRangeException(
+                    "def.ShortSwitch",
+                    "ShortSwitch or LongSwitch must be set" );
             }
             if( string.IsNullOrWhiteSpace( def.ShortSwitch ) )
             {
@@ -620,6 +656,7 @@ namespace My.Utilities
         }
 
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly" )]
         private void CheckMandatorySwitches()
         {
             var mandatories = definitions.Where( ( ad ) => ad.Mandatory );

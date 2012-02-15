@@ -7,7 +7,7 @@ using System.IO;
 namespace My.Utilities
 {
 
-    public class  FileOps
+    public static class  FileOps
     {
 
         public static IEnumerable<string>  LinesOf( TextReader reader )
@@ -41,7 +41,7 @@ namespace My.Utilities
                 int     offset = 0;
                 for(int i = 0;  i < 20; ++i )
                 {
-                    int     ctRead = reader.Read( buf, offset, 512 - offset );
+                    reader.Read( buf, offset, 512 - offset );
                     offset = 1;
 
                     int     foundAt = Array.IndexOf( buf, '\n' );
@@ -101,6 +101,7 @@ namespace My.Utilities
 
 
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed" ), System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Reliability", "CA2000:Dispose objects before losing scope" )]
         public static Tuple<TextWriter,bool> OpenOutput(
             string   outFile,
             Encoding outEncoding,
@@ -144,6 +145,7 @@ namespace My.Utilities
         }
 
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Reliability", "CA2000:Dispose objects before losing scope" )]
         public static Tuple<TextReader,string,Encoding> OpenInput(
             string   inFile )
         {

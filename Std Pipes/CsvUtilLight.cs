@@ -141,7 +141,9 @@ namespace My.Utilities
                         bool    forceCRLF = false )
         {
             Encoding              outEncoding     = Encoding.UTF8;
-            string                endOfLineMark   = Environment.NewLine;
+            string                endOfLineMark   = (forceCRLF
+                                                      ? "\r\n"
+                                                      : Environment.NewLine);
             string                prewrite        = string.Empty;
 
             System.IO.TextReader  reader = null;

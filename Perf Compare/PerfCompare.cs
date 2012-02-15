@@ -85,6 +85,7 @@ namespace My.Utilities
 
         #region internals
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Usage", "CA2208:InstantiateArgumentExceptionsCorrectly" )]
         internal void   ProvideDefaultBehaviors()
         {
             if( Run == null )
@@ -123,6 +124,7 @@ namespace My.Utilities
         private List<PerfResult>      results    = new List<PerfResult>();
 
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Design", "CA1026:DefaultParametersShouldNotBeUsed" )]
         public PerfCompare( int seed, int numberOfRuns, int scaleOverall, int scalePerRun = 1 )
         {
             this.RandSeed     = seed;
@@ -286,7 +288,7 @@ namespace My.Utilities
 
 
         #region internals
-        private int []  MakeSeeds( int ct, int seed )
+        private static int []  MakeSeeds( int ct, int seed )
         {
             Random   rand = new Random( seed );
             return (from i in Enumerable.Range( 0, ct )

@@ -18,6 +18,7 @@ namespace My.Utilities
         /// <param name="predicate">A function that returns a tuple of bool and TResult,
         /// the bool should be true if the elements are intersection-worthy.</param>
         /// <returns>A projected sequence that passes the predicate</returns>
+        [System.Diagnostics.CodeAnalysis.SuppressMessage( "Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures" )]
         public static IEnumerable<TResult>  Intersect<TLeft,TRight,TResult>
                                                 ( this IEnumerable<TLeft> left, 
                                                   IEnumerable<TRight>     right,
