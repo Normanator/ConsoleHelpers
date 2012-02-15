@@ -8,12 +8,16 @@ namespace My.Utilities
 {
     class CsvUtilLight
     {
-        public static string ChooseCsvColumns( string input,
-                                               char   delim=',',
-                                               params int [] columns )
+        public static TAgg ChooseCsvColumns<TAgg>(
+                   string input,
+                   Func<TAgg,string,TAgg>  aggregator,
+                   char   delim=',',
+                   params int [] columns )
+             where TAgg: class
         {
+            TAgg  cumulative =  default(TAgg);
             if( input == null || columns == null || columns.Length <=0 )
-                return input;
+                return cumulative;
 
             char []        inChars = input.ToCharArray();
             int            len     = inChars.Length;
@@ -22,7 +26,6 @@ namespace My.Utilities
             int            end      = -1;
             int            colCur   = 0;
             int            tgtIdx   = 0;
-            StringBuilder  sb       = new StringBuilder( len );
 
             for( ; tgtIdx < columns.Length; ++tgtIdx )
             {
@@ -43,24 +46,58 @@ namespace My.Utilities
                     };
                 }
 
-                if( tgtIdx != 0 )
-                {
-                    // For 2nd+ extracted columns, add delimiter
-                    sb.Append( delim );
-                }
-
-                sb.Append( inChars, start, end - start );
-
+                cumulative = aggregator(
+                               cumulative, 
+                               new string( inChars, start, end - start ) );
             }
 
             append_empties:
             while( tgtIdx++ < columns.Length )
             {
                 // Missing input columns are realized as empty output columns
-                sb.Append( delim );
+                cumulative = aggregator( cumulative, null );
             }
 
-            return sb.ToString();
+            return cumulative;
+        }
+
+
+        public static IList<string> ChooseCsvColumnsList( string input,
+                                                   char   delim=',',
+                                                   params int [] columns )
+        {
+             Func<IList<string>,string,IList<string>>  aggregator = (c,s) =>
+                {
+                    IList<string> list = c ?? new List<string>();
+                    list.Add( s );
+                    return list;
+                };
+
+            return ChooseCsvColumns( input, aggregator, delim, columns );
+        }
+
+
+        public static string ChooseCsvColumns( string input,
+                                               char   delim=',',
+                                               params int [] columns )
+        {
+            if( input == null || columns == null || columns.Length <=0 )
+                return input;
+
+            Func<StringBuilder,string,StringBuilder> aggregator = (c,s) =>
+                {
+                    StringBuilder sb = c ?? new StringBuilder();
+                    if( sb.Length > 0 )
+                    {
+                        sb.Append( delim );
+                    }
+                    sb.Append( s );
+                    return sb;
+                };
+
+            var builder = ChooseCsvColumns( input, aggregator, delim, columns );
+
+            return builder.ToString();
         }
 
 

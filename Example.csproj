@@ -51,6 +51,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="Std Pipes\CsvUtilLight.cs" />
     <Compile Include="Std Pipes\FileOps.cs" />
   </ItemGroup>
   <ItemGroup />
